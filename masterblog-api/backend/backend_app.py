@@ -81,6 +81,65 @@ def add_post():
     # Return the newly created post with a 201 Created status code
     return jsonify(new_post), 201
 
+# Define the "Delete" endpoint
+# This route will handle DELETE requests to '/posts/<id>'
+@app.route('/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    """
+    Deletes a blog post by its ID.
+    Returns a success message with 200 OK status if found and deleted.
+    Returns a 404 Not Found status if the post does not exist.
+    """
+    global POSTS # Declare POSTS as global to modify it within the function
+    original_len = len(POSTS) # Store original length to check if a post was removed
+
+    # Filter out the post with the given ID
+    # This creates a new list excluding the post to be deleted
+    POSTS = [post for post in POSTS if post['id'] != post_id]
+
+    # Check if a post was actually removed
+    if len(POSTS) < original_len:
+        # Post was found and deleted
+        return jsonify({"message": f"Post with id {post_id} has been deleted successfully."}), 200
+    else:
+        # Post with the given ID was not found
+        return jsonify({"error": f"Post with id {post_id} not found."}), 404
+
+# Define the "Update" endpoint
+# This route will handle PUT requests to '/posts/<id>'
+@app.route('/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    """
+    Updates an existing blog post by its ID.
+    Expects JSON input with optional 'title' and 'content'.
+    Returns the updated post with 200 OK status if found and updated.
+    Returns 404 Not Found status if the post does not exist.
+    """
+    global POSTS # Declare POSTS as global to modify it within the function
+    data = request.json # Get JSON data from the request body
+
+    # Find the post by its ID
+    post_found = None
+    for post in POSTS:
+        if post['id'] == post_id:
+            post_found = post
+            break
+
+    if not post_found:
+        # Post with the given ID was not found
+        return jsonify({"error": f"Post with id {post_id} not found."}), 404
+
+    # Update title if provided in the request body
+    if 'title' in data:
+        post_found['title'] = data['title']
+
+    # Update content if provided in the request body
+    if 'content' in data:
+        post_found['content'] = data['content']
+
+    # Return the updated post
+    return jsonify(post_found), 200
+
 
 # This block ensures the Flask development server runs only when
 # the script is executed directly (not when imported as a module).
@@ -88,6 +147,6 @@ if __name__ == '__main__':
     # Run the Flask app in debug mode.
     # debug=True allows for automatic reloading on code changes
     # and provides a debugger for easier development.
-    # Note: Flask's default port is 5000. If 5002 is required by your setup,
+    #  Flask's default port is 5000. If 5002 is required by your setup,
     # specify it: app.run(debug=True, port=5002)
     app.run(debug=True, port=5002) # Using port 5002 as per your previous interactions
