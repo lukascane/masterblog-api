@@ -32,9 +32,30 @@ def get_next_id():
 @app.route('/posts', methods=['GET'])
 def get_posts():
     """
-    Returns a list of all blog posts.
+    Returns a list of all blog posts, with optional sorting.
+    Sorting can be applied using 'sort' (title, content) and 'direction' (asc, desc) query parameters.
+    Returns 400 Bad Request for invalid sort fields or directions.
     """
-    return jsonify(POSTS) # jsonify converts the Python list of dictionaries into a JSON array
+    sort_by = request.args.get('sort')
+    direction = request.args.get('direction')
+
+    current_posts = list(POSTS) # Create a copy to sort, keeping original POSTS list unchanged for default order
+
+    if sort_by:
+        # Validate sort_by field
+        if sort_by not in ['title', 'content']:
+            return jsonify({"error": "Invalid sort field. 'sort' must be 'title' or 'content'."}), 400
+
+        # Validate direction
+        if direction not in ['asc', 'desc']:
+            return jsonify({"error": "Invalid sort direction. 'direction' must be 'asc' or 'desc'."}), 400
+
+        reverse_sort = (direction == 'desc')
+
+        # Sort the posts based on the specified field and direction
+        current_posts.sort(key=lambda post: post[sort_by], reverse=reverse_sort)
+
+    return jsonify(current_posts) # jsonify converts the Python list of dictionaries into a JSON array
 
 # Define the "Add" endpoint
 # This route will handle POST requests to '/posts'
@@ -170,7 +191,7 @@ def search_posts():
 
 
 # This block ensures the Flask development server runs only when
-# the script is executed directly (not when imported as a module).
+# the script is executed directly (not imported as a module).
 if __name__ == '__main__':
     # Run the Flask app in debug mode.
     # debug=True allows for automatic reloading on code changes
@@ -178,3 +199,4 @@ if __name__ == '__main__':
     # Note: Flask's default port is 5000. If 5002 is required by your setup,
     # specify it: app.run(debug=True, port=5002)
     app.run(debug=True, port=5002) # Using port 5002 as per your previous interactions
+
