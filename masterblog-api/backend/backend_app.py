@@ -140,6 +140,34 @@ def update_post(post_id):
     # Return the updated post
     return jsonify(post_found), 200
 
+# Define the "Search" endpoint
+# This route handles GET requests to '/posts/search' with query parameters
+@app.route('/posts/search', methods=['GET'])
+def search_posts():
+    """
+    Searches for blog posts by title or content based on query parameters.
+    Returns a list of matching posts. Returns an empty list if no matches.
+    """
+    search_title = request.args.get('title', '').lower() # Get 'title' query param, default to empty string, convert to lowercase
+    search_content = request.args.get('content', '').lower() # Get 'content' query param, default to empty string, convert to lowercase
+
+    results = []
+    for post in POSTS:
+        # Convert post title and content to lowercase for case-insensitive search
+        post_title_lower = post['title'].lower()
+        post_content_lower = post['content'].lower()
+
+        # Check if title matches (if search_title is provided)
+        title_matches = search_title and search_title in post_title_lower
+        # Check if content matches (if search_content is provided)
+        content_matches = search_content and search_content in post_content_lower
+
+        # Add post to results if either title or content matches
+        if title_matches or content_matches:
+            results.append(post)
+
+    return jsonify(results) # Return the list of matching posts
+
 
 # This block ensures the Flask development server runs only when
 # the script is executed directly (not when imported as a module).
@@ -147,6 +175,6 @@ if __name__ == '__main__':
     # Run the Flask app in debug mode.
     # debug=True allows for automatic reloading on code changes
     # and provides a debugger for easier development.
-    #  Flask's default port is 5000. If 5002 is required by your setup,
+    # Note: Flask's default port is 5000. If 5002 is required by your setup,
     # specify it: app.run(debug=True, port=5002)
     app.run(debug=True, port=5002) # Using port 5002 as per your previous interactions
